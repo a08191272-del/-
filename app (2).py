@@ -64,62 +64,63 @@ def init_db():
 init_db()
 
 # ---------------------------------------------------------
-# 2. الهوية البصرية المطابقة تماماً لمنصة نور (تصميم ثنائي متناسق)
+# 2. الهوية البصرية (خلفية داكنة غير بيضاء + أزرار واضحة وغير مخفية)
 # ---------------------------------------------------------
-st.set_page_config(page_title="مدرسة السلطان فيصل بن تركي (5-7) | نور", layout="wide", page_icon="🏫")
+st.set_page_config(page_title="مدرسة السلطان فيصل بن تركي (5-7)", layout="wide", page_icon="🏫")
 
 st.markdown("""
     <style>
     .stApp {
-        background-color: #f8fafc;
-        color: #1e293b;
+        background: radial-gradient(circle at 70% 30%, #1e293b 0%, #0b1329 100%);
+        color: #f8fafc;
         font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     }
     .noor-banner {
-        background: linear-gradient(135deg, rgba(15, 23, 42, 0.85) 0%, rgba(30, 41, 59, 0.9) 100%), 
+        background: linear-gradient(135deg, rgba(15, 23, 42, 0.9) 0%, rgba(30, 41, 59, 0.95) 100%), 
                     url('https://images.unsplash.com/photo-1580582932707-520aed937b7b?auto=format&fit=crop&w=1200&q=80');
         background-size: cover;
         background-position: center;
-        padding: 60px 40px;
-        border-radius: 20px;
+        padding: 50px 30px;
+        border-radius: 16px;
         color: white;
-        height: 100%;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+        border: 1px solid rgba(255, 255, 255, 0.1);
     }
     .login-card-noor {
-        background: #ffffff;
-        padding: 40px;
+        background: rgba(30, 41, 59, 0.85);
+        padding: 35px;
         border-radius: 16px;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
-        border: 1px solid #e2e8f0;
+        box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        border: 1px solid rgba(255, 255, 255, 0.1);
     }
     .stButton>button {
-        background-color: #5b46d4;
-        color: white;
-        border-radius: 12px;
-        font-weight: bold;
-        border: none;
-        padding: 0.6rem 1rem;
-        width: 100%;
-        box-shadow: 0 4px 12px rgba(91, 70, 212, 0.3);
+        background: linear-gradient(135deg, #0ea5e9 0%, #0369a1 100%) !important;
+        color: white !important;
+        border-radius: 10px !important;
+        font-weight: bold !important;
+        border: none !important;
+        padding: 0.6rem 1rem !important;
+        width: 100% !important;
+        box-shadow: 0 4px 12px rgba(14, 165, 233, 0.4) !important;
+        opacity: 1 !important;
+        visibility: visible !important;
+        display: block !important;
         transition: all 0.3s ease;
     }
     .stButton>button:hover {
-        background-color: #4c37bc;
-        color: white;
+        background: linear-gradient(135deg, #0284c7 0%, #075985 100%) !important;
     }
     .main-header {
         font-size: 1.8rem;
         font-weight: 700;
-        color: #1e293b;
+        color: #ffffff;
         margin-bottom: 20px;
+        text-shadow: 0 2px 10px rgba(56, 189, 248, 0.3);
     }
     div[data-testid="stSidebar"] {
-        background-color: #0f172a;
-        color: #ffffff;
+        background-color: #0f172a !important;
+        color: #ffffff !important;
+        border-left: 1px solid rgba(255, 255, 255, 0.05);
     }
     div[data-testid="stSidebar"] * {
         color: #f8fafc !important;
@@ -132,7 +133,7 @@ if 'logged_in' not in st.session_state:
     st.session_state.user = None
 
 # ---------------------------------------------------------
-# 3. شاشة تسجيل الدخول بتصميم منصة نور الثنائي
+# 3. شاشة تسجيل الدخول
 # ---------------------------------------------------------
 if not st.session_state.logged_in:
     st.markdown("<br>", unsafe_allow_html=True)
@@ -141,10 +142,10 @@ if not st.session_state.logged_in:
     with col_left:
         st.markdown("""
             <div class='noor-banner'>
-                <div style='font-size: 2rem; font-weight: bold; margin-bottom: 10px; color: #38bdf8;'>noor نور</div>
-                <h1 style='font-size: 2.5rem; font-weight: 800; margin-bottom: 20px; line-height: 1.3;'>أهلاً بك في المتعة الحقيقية للتعلم الذكي</h1>
-                <p style='font-size: 1.2rem; color: #cbd5e1; margin-bottom: 30px;'>مدرسة السلطان فيصل بن تركي للتعليم الأساسي (5-7)<br>بوابة شؤون الطلاب والمتابعة السلوكية</p>
-                <div style='display: flex; gap: 15px; align-items: center;'>
+                <div style='font-size: 1.8rem; font-weight: bold; margin-bottom: 10px; color: #38bdf8;'>🏫 مدرسة السلطان فيصل بن تركي</div>
+                <h1 style='font-size: 2.2rem; font-weight: 800; margin-bottom: 15px; line-height: 1.3;'>أهلاً بك في المتعة الحقيقية للتعلم الذكي</h1>
+                <p style='font-size: 1.1rem; color: #cbd5e1; margin-bottom: 25px;'>بوابة شؤون الطلاب والمتابعة السلوكية والتعليم الأساسي (5-7)</p>
+                <div>
                     <span style='background: rgba(56, 189, 248, 0.2); padding: 8px 16px; border-radius: 20px; font-size: 0.9rem; border: 1px solid #38bdf8;'>وزارة التربية والتعليم</span>
                 </div>
             </div>
@@ -152,13 +153,13 @@ if not st.session_state.logged_in:
         
     with col_right:
         st.markdown("<div class='login-card-noor'>", unsafe_allow_html=True)
-        st.markdown("<h2 style='color: #1e293b; margin-bottom: 5px; font-weight: 700;'>تسجيل الدخول</h2>", unsafe_allow_html=True)
-        st.markdown("<p style='color: #64748b; margin-bottom: 25px; font-size: 0.95rem;'>أدخل بيانات حساب الكادر التعليمي للمتابعة</p>", unsafe_allow_html=True)
+        st.markdown("<h2 style='color: #ffffff; margin-bottom: 5px; font-weight: 700;'>تسجيل الدخول</h2>", unsafe_allow_html=True)
+        st.markdown("<p style='color: #94a3b8; margin-bottom: 25px; font-size: 0.95rem;'>أدخل بيانات الكادر التعليمي للمتابعة</p>", unsafe_allow_html=True)
         
-        username_input = st.text_input("اسم الدخول (Username)", placeholder="أدخل اسم المستخدم")
-        password_input = st.text_input("كلمة المرور (Password)", type="password", placeholder="أدخل كلمة المرور")
+        username_input = st.text_input("اسم الدخول (Username)")
+        password_input = st.text_input("كلمة المرور (Password)", type="password")
         
-        st.markdown("<div style='margin: 10px 0 20px 0;'><a href='#' style='color: #5b46d4; text-decoration: none; font-size: 0.9rem;'>أنسيت بيانات الدخول؟</a></div>", unsafe_allow_html=True)
+        st.markdown("<div style='margin: 10px 0 20px 0;'><a href='#' style='color: #38bdf8; text-decoration: none; font-size: 0.9rem;'>أنسيت بيانات الدخول؟</a></div>", unsafe_allow_html=True)
         
         if st.button("تسجيل الدخول", use_container_width=True):
             conn = sqlite3.connect('faisal_school.db')
@@ -174,12 +175,10 @@ if not st.session_state.logged_in:
             else:
                 st.error("اسم المستخدم أو كلمة المرور غير صحيحة.")
         
-        st.markdown("<hr style='margin: 25px 0; border-color: #e2e8f0;'>", unsafe_allow_html=True)
-        st.markdown("<div style='text-align: center; color: #94a3b8; font-size: 0.85rem;'>منصة نور التعليمية الذكية</div>", unsafe_allow_html=True)
         st.markdown("</div>", unsafe_allow_html=True)
 
 # ---------------------------------------------------------
-# 4. داخل النظام (اللوحة والخدمات الكاملة دون أي حذف)
+# 4. داخل النظام (اللوحة والخدمات الكاملة)
 # ---------------------------------------------------------
 else:
     user = st.session_state.user
