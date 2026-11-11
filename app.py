@@ -5,7 +5,7 @@ import pandas as pd
 from datetime import date
 
 # ---------------------------------------------------------
-# 1. إعداد وحفظ البيانات باستخدام ملفات JSON السريعة
+# 1. نظام الحفظ والاستعادة الفوري والمستقر
 # ---------------------------------------------------------
 DB_FILE = 'school_data.json'
 
@@ -42,7 +42,7 @@ def save_data(data):
 data = load_data()
 
 # ---------------------------------------------------------
-# 2. الهوية البصرية وتنسيقات الفيديو
+# 2. الهوية البصرية وتنسيقات التصميم الداكن والفيديو
 # ---------------------------------------------------------
 st.set_page_config(page_title="مدرسة السلطان فيصل بن تركي (5-7)", layout="wide", page_icon="🏫")
 
@@ -96,9 +96,6 @@ st.markdown("""
         padding: 0.6rem 1rem !important;
         width: 100% !important;
         box-shadow: 0 4px 12px rgba(14, 165, 233, 0.4) !important;
-        opacity: 1 !important;
-        visibility: visible !important;
-        display: block !important;
         transition: all 0.3s ease;
     }
     .stButton>button:hover {
@@ -127,7 +124,7 @@ if 'logged_in' not in st.session_state:
     st.session_state.user = None
 
 # ---------------------------------------------------------
-# 3. عرض الفيديو في البداية
+# 3. عرض الفيديو الترحيبي في البداية
 # ---------------------------------------------------------
 st.markdown("""
     <div class="video-header-container">
@@ -164,8 +161,6 @@ if not st.session_state.logged_in:
         username_input = st.text_input("اسم الدخول (Username)")
         password_input = st.text_input("كلمة المرور (Password)", type="password")
         
-        st.markdown("<div style='margin: 10px 0 20px 0;'><a href='#' style='color: #38bdf8; text-decoration: none; font-size: 0.9rem;'>أنسيت بيانات الدخول؟</a></div>", unsafe_allow_html=True)
-        
         if st.button("تسجيل الدخول", use_container_width=True):
             user_found = None
             for u in data["users"]:
@@ -178,12 +173,12 @@ if not st.session_state.logged_in:
                 st.session_state.user = user_found
                 st.rerun()
             else:
-                st.error("اسم المستخدم أو كلمة المرور غير صحيحة.")
+                st.error("اسم المستخدم أو كلمة المرور غير صحيحة. (الآدمن الافتراضي: admin / 121)")
         
         st.markdown("</div>", unsafe_allow_html=True)
 
 # ---------------------------------------------------------
-# 5. داخل النظام (اللوحة والخدمات الكاملة)
+# 5. لوحة التحكم وخدمات النظام الكاملة
 # ---------------------------------------------------------
 else:
     user = st.session_state.user
@@ -205,8 +200,8 @@ else:
         st.markdown("<div class='main-header'>🏫 تسجيل ورصد الحضور والغياب اليومي</div>", unsafe_allow_html=True)
         
         class_names = [c["class_name"] for c in data["classes"]]
-        selected_class = st.selectbox("Class select edition", class_names)
-        att_date = st.date_input("Date", date.today())
+        selected_class = st.selectbox("اختر الصف", class_names)
+        att_date = st.date_input("تاريخ الحضور", date.today())
         
         if selected_class:
             st.markdown(f"### طلاب صف {selected_class}")
@@ -219,7 +214,7 @@ else:
                 for student in class_students:
                     col1, col2 = st.columns([3, 2])
                     col1.write(student['name'])
-                    status = col2.selectbox("Status", ["حاضر", "غائب", "متأخر", "غائب بعذر"], key=f"att_{student['id']}")
+                    status = col2.selectbox("الحالة", ["حاضر", "غائب", "متأخر", "غائب بعذر"], key=f"att_{student['id']}")
                     records.append({
                         "student_id": student['id'],
                         "student_name": student['name'],
@@ -339,12 +334,12 @@ else:
 
     elif choice == "⚙️ إدارة النسخ الاحتياطي":
         st.markdown("<div class='main-header'>⚙️ إدارة النسخ الاحتياطي واستعادة البيانات</div>", unsafe_allow_html=True)
-        st.info("من هنا يمكنك تحميل نسخة احتياطية لكافة بيانات النظام (الطلاب، الحضور، المعلمين)، أو رفع ملف النسخة الاحتياطية واستعادته بضغطة زر لتظهر لك كل البيانات فوراً.")
+        st.info("من هنا يمكنك تحميل ملف البيانات الحالي لحفظه على جهازك، أو رفع ملف النسخة الاحتياطية واستعادته بضغطة زر واحدة لتظهر لك كافة السجلات والغياب فوراً.")
         
         col_dl, col_ul = st.columns(2)
         
         with col_dl:
-            st.subheader("📥 تحميل نسخة احتياطية")
+            st.subheader("📥 تحميل النسخة الاحتياطية")
             json_str = json.dumps(data, ensure_ascii=False, indent=4)
             st.download_button(
                 label="تحميل ملف البيانات الحالي",
@@ -358,7 +353,7 @@ else:
             st.subheader("📤 استعادة البيانات")
             uploaded_file = st.file_uploader("اختر ملف النسخة الاحتياطية (.json)", type=["json"])
             if uploaded_file is not None:
-                if st.button("تحميل الملف واستعادة كافة البيانات", use_container_width=True):
+                if st.button("تحميل الملف واستعادة كافة السجلات", use_container_width=True):
                     try:
                         restored_data = json.load(uploaded_file)
                         save_data(restored_data)
