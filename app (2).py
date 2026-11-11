@@ -6,8 +6,12 @@ from datetime import date
 # ---------------------------------------------------------
 # 1. إعداد قاعدة البيانات وتأسيس الجداول
 # ---------------------------------------------------------
+def get_db_connection():
+    conn = sqlite3.connect('faisal_school.db', check_same_thread=False)
+    return conn
+
 def init_db():
-    conn = sqlite3.connect('faisal_school.db')
+    conn = get_db_connection()
     c = conn.cursor()
     
     c.execute('''CREATE TABLE IF NOT EXISTS users (
@@ -64,7 +68,7 @@ def init_db():
 init_db()
 
 # ---------------------------------------------------------
-# 2. الهوية البصرية (خلفية داكنة غير بيضاء + أزرار واضحة وغير مخفية)
+# 2. الهوية البصرية وتنسيقات الفيديو
 # ---------------------------------------------------------
 st.set_page_config(page_title="مدرسة السلطان فيصل بن تركي (5-7)", layout="wide", page_icon="🏫")
 
@@ -74,6 +78,22 @@ st.markdown("""
         background: radial-gradient(circle at 70% 30%, #1e293b 0%, #0b1329 100%);
         color: #f8fafc;
         font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    .video-header-container {
+        width: 100%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin-bottom: 25px;
+        border-radius: 16px;
+        overflow: hidden;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    .intro-video {
+        width: 100%;
+        max-height: 400px;
+        object-fit: cover;
     }
     .noor-banner {
         background: linear-gradient(135deg, rgba(15, 23, 42, 0.9) 0%, rgba(30, 41, 59, 0.95) 100%), 
@@ -133,10 +153,21 @@ if 'logged_in' not in st.session_state:
     st.session_state.user = None
 
 # ---------------------------------------------------------
-# 3. شاشة تسجيل الدخول
+# 3. عرض الفيديو في البداية
+# ---------------------------------------------------------
+st.markdown("""
+    <div class="video-header-container">
+        <video class="intro-video" autoplay loop muted playsinline>
+            <source src="video_1.mp4" type="video/mp4">
+            متصفحك لا يدعم تشغيل الفيديو.
+        </video>
+    </div>
+""", unsafe_allow_html=True)
+
+# ---------------------------------------------------------
+# 4. شاشة تسجيل الدخول
 # ---------------------------------------------------------
 if not st.session_state.logged_in:
-    st.markdown("<br>", unsafe_allow_html=True)
     col_left, col_right = st.columns([1.3, 1], gap="large")
     
     with col_left:
@@ -162,7 +193,7 @@ if not st.session_state.logged_in:
         st.markdown("<div style='margin: 10px 0 20px 0;'><a href='#' style='color: #38bdf8; text-decoration: none; font-size: 0.9rem;'>أنسيت بيانات الدخول؟</a></div>", unsafe_allow_html=True)
         
         if st.button("تسجيل الدخول", use_container_width=True):
-            conn = sqlite3.connect('faisal_school.db')
+            conn = get_db_connection()
             c = conn.cursor()
             c.execute("SELECT username, role, name FROM users WHERE username=? AND password=?", (username_input, password_input))
             user = c.fetchone()
@@ -178,7 +209,7 @@ if not st.session_state.logged_in:
         st.markdown("</div>", unsafe_allow_html=True)
 
 # ---------------------------------------------------------
-# 4. داخل النظام (اللوحة والخدمات الكاملة)
+# 5. داخل النظام (اللوحة والخدمات الكاملة)
 # ---------------------------------------------------------
 else:
     user = st.session_state.user
@@ -196,7 +227,7 @@ else:
     menu_options = ["📋 رصد الغياب والحضور", "⚠️ تسجيل المخالفات السلوكية", "📚 إضافة صفوف وطلاب", "👥 إدارة المعلمين", "📊 التقارير العامة"]
     choice = st.sidebar.radio("Navigation", menu_options, label_visibility="collapsed")
 
-    conn = sqlite3.connect('faisal_school.db')
+    conn = get_db_connection()
 
     if choice == "📋 رصد الغياب والحضور":
         st.markdown("<div class='main-header'>🏫 تسجيل ورصد الحضور والغياب اليومي</div>", unsafe_allow_html=True)
@@ -259,6 +290,7 @@ else:
                         c.execute("INSERT INTO classes (class_name) VALUES (?)", (new_class,))
                         conn.commit()
                         st.success(f"تمت إضافة الصف {new_class} بنجاح!")
+                        st.rerun()
                     except:
                         st.warning("هذا الصف مسجل مسبقاً.")
                 else:
@@ -274,6 +306,7 @@ else:
                     c.execute("INSERT INTO students (name, class_name) VALUES (?, ?)", (student_name, selected_class))
                     conn.commit()
                     st.success(f"تم تسجيل الطالب {student_name} بنجاح!")
+                    st.rerun()
                 else:
                     st.error("الرجاء إكمال البيانات.")
 
@@ -290,7 +323,8 @@ else:
                         c.execute("INSERT INTO users (username, password, role, name) VALUES (?, ?, 'teacher', ?)", (t_username, t_password, t_name))
                         conn.commit()
                         st.success(f"تم إنشاء حساب المعلم {t_name} بنجاح!")
-                    except:
+                        st.rerun()
+                    except Exception as e:
                         st.error("اسم المستخدم مسجل مسبقاً.")
                 else:
                     st.error("يرجى ملء كافة الحقول.")
