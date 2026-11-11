@@ -338,26 +338,31 @@ else:
             st.dataframe(df_viol, use_container_width=True)
 
     elif choice == "⚙️ إدارة النسخ الاحتياطي":
-        st.markdown("<div class='main-header'>⚙️ النسخ الاحتياطي وحفظ البيانات</div>", unsafe_allow_html=True)
-        st.info("لتجنب فقدان البيانات نهائياً بسبب التحديثات السحابية، يمكنك تحميل نسخة احتياطية لبياناتك ورفعها متى شئت.")
+        st.markdown("<div class='main-header'>⚙️ إدارة النسخ الاحتياطي واستعادة البيانات</div>", unsafe_allow_html=True)
+        st.info("من هنا يمكنك تحميل نسخة احتياطية لكافة بيانات النظام (الطلاب، الحضور، المعلمين)، أو رفع ملف النسخة الاحتياطية واستعادته بضغطة زر لتظهر لك كل البيانات فوراً.")
         
-        # زر لتنزيل ملف البيانات الحالي
-        json_str = json.dumps(data, ensure_ascii=False, indent=4)
-        st.download_button(
-            label="📥 تحميل نسخة احتياطية من البيانات (JSON)",
-            data=json_str,
-            file_name="school_data_backup.json",
-            mime="application/json"
-        )
+        col_dl, col_ul = st.columns(2)
         
-        st.markdown("---")
-        # زر لرفع واستعادة ملف البيانات القديم
-        uploaded_file = st.file_uploader("📤 استعادة البيانات من ملف سابق", type=["json"])
-        if uploaded_file is not None:
-            try:
-                restored_data = json.load(uploaded_file)
-                save_data(restored_data)
-                st.success("تم استعادة البيانات بنجاح! قم بتحديث الصفحة.")
-                st.rerun()
-            except Exception as e:
-                st.error("الملف غير صالح أو حدث خطأ أثناء القراءة.")
+        with col_dl:
+            st.subheader("📥 تحميل نسخة احتياطية")
+            json_str = json.dumps(data, ensure_ascii=False, indent=4)
+            st.download_button(
+                label="تحميل ملف البيانات الحالي",
+                data=json_str,
+                file_name="school_data_backup.json",
+                mime="application/json",
+                use_container_width=True
+            )
+            
+        with col_ul:
+            st.subheader("📤 استعادة البيانات")
+            uploaded_file = st.file_uploader("اختر ملف النسخة الاحتياطية (.json)", type=["json"])
+            if uploaded_file is not None:
+                if st.button("تحميل الملف واستعادة كافة البيانات", use_container_width=True):
+                    try:
+                        restored_data = json.load(uploaded_file)
+                        save_data(restored_data)
+                        st.success("تم استعادة كافة بيانات الطلاب والغياب والمعلمين بنجاح تام! قم بتحديث الصفحة.")
+                        st.rerun()
+                    except Exception as e:
+                        st.error("حدث خطأ أثناء قراءة الملف، تأكد أنه ملف نسخ احتياطي صالح.")
