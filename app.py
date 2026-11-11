@@ -29,8 +29,11 @@ def load_data():
             json.dump(default_data, f, ensure_ascii=False, indent=4)
         return default_data
     
-    with open(DB_FILE, 'r', encoding='utf-8') as f:
-        return json.load(f)
+    try:
+        with open(DB_FILE, 'r', encoding='utf-8') as f:
+            return json.load(f)
+    except:
+        return load_data()
 
 def save_data(data):
     with open(DB_FILE, 'w', encoding='utf-8') as f:
@@ -195,7 +198,7 @@ else:
 
     st.sidebar.markdown("---")
     st.sidebar.markdown("### Main Menu")
-    menu_options = ["📋 رصد الغياب والحضور", "⚠️ تسجيل المخالفات السلوكية", "📚 إضافة صفوف وطلاب", "👥 إدارة المعلمين", "📊 التقارير العامة"]
+    menu_options = ["📋 رصد الغياب والحضور", "⚠️ تسجيل المخالفات السلوكية", "📚 إضافة صفوف وطلاب", "👥 إدارة المعلمين", "📊 التقارير العامة", "⚙️ إدارة النسخ الاحتياطي"]
     choice = st.sidebar.radio("Navigation", menu_options, label_visibility="collapsed")
 
     if choice == "📋 رصد الغياب والحضور":
@@ -333,3 +336,28 @@ else:
         with tab_viol:
             df_viol = pd.DataFrame(data["violations"])
             st.dataframe(df_viol, use_container_width=True)
+
+    elif choice == "⚙️ إدارة النسخ الاحتياطي":
+        st.markdown("<div class='main-header'>⚙️ النسخ الاحتياطي وحفظ البيانات</div>", unsafe_allow_html=True)
+        st.info("لتجنب فقدان البيانات نهائياً بسبب التحديثات السحابية، يمكنك تحميل نسخة احتياطية لبياناتك ورفعها متى شئت.")
+        
+        # زر لتنزيل ملف البيانات الحالي
+        json_str = json.dumps(data, ensure_ascii=False, indent=4)
+        st.download_button(
+            label="📥 تحميل نسخة احتياطية من البيانات (JSON)",
+            data=json_str,
+            file_name="school_data_backup.json",
+            mime="application/json"
+        )
+        
+        st.markdown("---")
+        # زر لرفع واستعادة ملف البيانات القديم
+        uploaded_file = st.file_uploader("📤 استعادة البيانات من ملف سابق", type=["json"])
+        if uploaded_file is not None:
+            try:
+                restored_data = json.load(uploaded_file)
+                save_data(restored_data)
+                st.success("تم استعادة البيانات بنجاح! قم بتحديث الصفحة.")
+                st.rerun()
+            except Exception as e:
+                st.error("الملف غير صالح أو حدث خطأ أثناء القراءة.")
