@@ -7,7 +7,7 @@ from supabase import create_client, Client
 # 1. بيانات الربط السحابي (Supabase)
 # ---------------------------------------------------------
 SUPABASE_URL = "https://knnqvqifwngvtjijjpvq.supabase.co"
-SUPABASE_KEY = "ضع_مفتاح_Publishable_هنا"  # الصق المفتاح الذي نسخته من الصورة هنا
+SUPABASE_KEY = "sb_publishable_..." # ضع مفتاحك هنا
 
 st.set_page_config(page_title="مدرسة السلطان فيصل بن تركي (5-7)", layout="wide", page_icon="🏫")
 
@@ -27,8 +27,25 @@ def fetch_data(table_name):
 def insert_data(table_name, records):
     try:
         supabase.table(table_name).insert(records).execute()
+        return True
     except Exception as e:
-        st.error(f"خطأ في الحفظ السحابي: {e}")
+        return False
+
+# إضافة الصفوف افتراضياً إذا كانت قاعدة البيانات فارغة لتوفير وقتك
+def seed_default_classes():
+    df_c = fetch_data("classes")
+    if df_c.empty or len(df_c) < 5:
+        default_classes = []
+        grades = ["سادس", "سابع", "ثامن", "تاسع"]
+        for g in grades:
+            for i in range(1, 17):
+                default_classes.append({"class_name": f"{g}/{i}"})
+        try:
+            supabase.table("classes").upsert(default_classes, on_conflict="class_name").execute()
+        except:
+            pass
+
+seed_default_classes()
 
 # ---------------------------------------------------------
 # 2. الواجهة وتنسيقات التصميم والفيديو
@@ -151,7 +168,7 @@ if not st.session_state.logged_in:
         if st.button("تسجيل الدخول", use_container_width=True):
             if username_input == "admin" and password_input == "121":
                 st.session_state.logged_in = True
-                st.session_state.user = {"username": "admin", "role": "admin", "name": "Administrator"}
+                st.session_state.user = {"username": "admin", "role": "admin", "name": "مدير النظام"}
                 st.rerun()
             else:
                 df_users = fetch_data("users")
@@ -174,17 +191,17 @@ if not st.session_state.logged_in:
 # ---------------------------------------------------------
 else:
     user = st.session_state.user
-    st.sidebar.markdown(f"### 👋 Welcome")
+    st.sidebar.markdown(f"### 👋 مرحباً بك")
     st.sidebar.markdown(f"**{user['name']}**")
-    st.sidebar.info(f"Permissions: {user['role']}")
+    st.sidebar.info(f"الصلاحية: {user['role']}")
     
-    if st.sidebar.button("🚪 Logout"):
+    if st.sidebar.button("🚪 تسجيل الخروج"):
         st.session_state.logged_in = False
         st.session_state.user = None
         st.rerun()
 
     st.sidebar.markdown("---")
-    st.sidebar.markdown("### Main Menu")
+    st.sidebar.markdown("### القائمة الرئيسية")
     menu_options = ["📋 رصد الغياب والحضور", "⚠️ تسجيل المخالفات السلوكية", "📚 إضافة صفوف وطلاب", "👥 إدارة المعلمين", "📊 التقارير العامة"]
     choice = st.sidebar.radio("Navigation", menu_options, label_visibility="collapsed")
 
@@ -192,7 +209,7 @@ else:
         st.markdown("<div class='main-header'>🏫 تسجيل ورصد الحضور والغياب اليومي</div>", unsafe_allow_html=True)
         
         df_classes = fetch_data("classes")
-        class_list = df_classes['class_name'].tolist() if not df_classes.empty and 'class_name' in df_classes.columns else ["سادس/1", "سادس/2", "سابع/1", "سابع/2"]
+        class_list = df_classes['class_name'].tolist() if not df_classes.empty and 'class_name' in df_classes.columns else ["سادس/1"]
         selected_class = st.selectbox("اختر الصف", class_list)
         att_date = st.date_input("تاريخ الحضور", date.today())
         
@@ -202,7 +219,7 @@ else:
             class_students = df_students[df_students['class_name'] == selected_class] if not df_students.empty and 'class_name' in df_students.columns else pd.DataFrame()
             
             if class_students.empty:
-                st.info("لا يوجد طلاب مسجلين في هذا الصف حالياً. قم بإضافتهم من قسم (إضافة صفوف وطلاب).")
+                st.info("لا يوجد طلاب مسجلين في هذا الصف حالياً. قم بإضافتهم فوراً من قسم (إضافة صفوف وطلاب).")
             else:
                 records = []
                 for idx, row in class_students.iterrows():
@@ -217,9 +234,11 @@ else:
                         "recorded_by": user['name']
                     })
                 
-                if st.button("حفظ سجل الغياب"):
-                    insert_data("attendance", records)
-                    st.success("تم حفظ الحضور والغياب سحابياً وفورياً بنجاح تام!")
+                if st.button("حفظ سجل الغياب سحابياً"):
+                    if insert_data("attendance", records):
+                        st.success("تم حفظ الحضور والغياب سحابياً وفورياً بنجاح تام!")
+                    else:
+                        st.error("حدث خطأ أثناء الحفظ، تأكد من الاتصال.")
 
     elif choice == "⚠️ تسجيل المخالفات السلوكية":
         st.markdown("<div class='main-header'>⚠️ تسجيل ومتابعة المخالفات السلوكية</div>", unsafe_allow_html=True)
@@ -231,13 +250,15 @@ else:
             df_students = fetch_data("students")
             class_students = df_students[df_students['class_name'] == selected_class] if not df_students.empty and 'class_name' in df_students.columns else pd.DataFrame()
                 
-            if not class_students.empty:
+            if class_students.empty:
+                st.warning("لا يوجد طلاب في هذا الصف بعد.")
+            else:
                 student_name = st.selectbox("اختر الطالب", options=class_students['name'].tolist())
                 v_type = st.selectbox("نوع المخالفة", ["عدم إحضار أدوات/كتب", "استخدام الهاتف", "التأخر عن الحصة", "إثارة الشغب", "سلوك غير لائق"])
                 v_action = st.text_input("الإجراء المتخذ (تنبيه شفوي / استدعاء ولي أمر...)")
                 v_date = st.date_input("تاريخ المخالفة", date.today())
                 
-                if st.button("توثيق المخالفة"):
+                if st.button("توثيق المخالفة سحابياً"):
                     new_v = [{
                         "student_name": student_name,
                         "class_name": selected_class,
@@ -246,35 +267,39 @@ else:
                         "date": str(v_date),
                         "recorded_by": user['name']
                     }]
-                    insert_data("violations", new_v)
-                    st.success(f"تم تسجيل المخالفة للطالب {student_name} سحابياً بنجاح.")
+                    if insert_data("violations", new_v):
+                        st.success(f"تم تسجيل المخالفة للطالب {student_name} سحابياً بنجاح.")
 
     elif choice == "📚 إضافة صفوف وطلاب":
-        st.markdown("<div class='main-header'>📚 إدارة الصفوف الطلاب</div>", unsafe_allow_html=True)
-        tab1, tab2 = st.tabs(["إضافة صف/شعبة", "إضافة طالب جديد"])
+        st.markdown("<div class='main-header'>📚 إدارة الصفوف والطلاب</div>", unsafe_allow_html=True)
+        tab1, tab2 = st.tabs(["إضافة صف/شعبة جديدة", "إضافة طالب جديد"])
         
         with tab1:
-            new_class = st.text_input("اسم الصف/الشعبة (مثال: سادس/1)")
-            if st.button("حفظ الصف الجديد"):
+            new_class = st.text_input("اسم الصف/الشعبة الجديد (مثال: سادس/17 أو سابع/17)")
+            if st.button("حفظ الصف الجديد سحابياً"):
                 if new_class:
-                    insert_data("classes", [{"class_name": new_class}])
-                    st.success(f"تمت إضافة الصف {new_class} بنجاح!")
-                    st.rerun()
+                    if insert_data("classes", [{"class_name": new_class}]):
+                        st.success(f"تمت إضافة الصف {new_class} بنجاح للسحابة!")
+                        st.rerun()
+                    else:
+                        st.error("الصف موجود مسبقاً أو حدث خطأ.")
                 else:
                     st.error("الرجاء إدخال اسم الصف.")
                     
         with tab2:
             df_classes = fetch_data("classes")
             class_list = df_classes['class_name'].tolist() if not df_classes.empty and 'class_name' in df_classes.columns else []
-            selected_class = st.selectbox("اختر الصف لإضافة الطالب", class_list)
+            selected_class = st.selectbox("اختر الصف لإضافة الطالب إليه", class_list)
             student_name = st.text_input("اسم الطالب الثلاثي")
-            if st.button("تسجيل الطالب"):
+            if st.button("تسجيل الطالب سحابياً"):
                 if student_name and selected_class:
-                    insert_data("students", [{"name": student_name, "class_name": selected_class}])
-                    st.success(f"تم تسجيل الطالب {student_name} بنجاح!")
-                    st.rerun()
+                    if insert_data("students", [{"name": student_name, "class_name": selected_class}]):
+                        st.success(f"تم تسجيل الطالب {student_name} في صف {selected_class} بنجاح!")
+                        st.rerun()
+                    else:
+                        st.error("خطأ في حفظ الطالب.")
                 else:
-                    st.error("الرجاء إكمال البيانات.")
+                    st.error("الرجاء إكمال اسم الطالب واختيار الصف.")
 
     elif choice == "👥 إدارة المعلمين":
         st.markdown("<div class='main-header'>👥 إدارة حسابات الكادر التعليمي</div>", unsafe_allow_html=True)
@@ -282,15 +307,17 @@ else:
             t_name = st.text_input("اسم المعلم الكامل")
             t_username = st.text_input("اسم المستخدم للدخول")
             t_password = st.text_input("كلمة المرور")
-            if st.form_submit_button("إضافة حساب معلم"):
+            if st.form_submit_button("إضافة حساب معلم جديد"):
                 if t_name and t_username and t_password:
-                    insert_data("users", [{"username": t_username, "password": t_password, "role": "teacher", "name": t_name}])
-                    st.success(f"تم إنشاء حساب المعلم {t_name} بنجاح!")
-                    st.rerun()
+                    if insert_data("users", [{"username": t_username, "password": t_password, "role": "teacher", "name": t_name}]):
+                        st.success(f"تم إنشاء حساب المعلم {t_name} بنجاح!")
+                        st.rerun()
+                    else:
+                        st.error("اسم المستخدم مستخدم مسبقاً أو حدث خطأ.")
                 else:
                     st.error("يرجى ملء كافة الحقول.")
         
-        st.subheader("قائمة المعلمين")
+        st.subheader("قائمة المعلمين المسجلين")
         df_users = fetch_data("users")
         if not df_users.empty and 'name' in df_users.columns:
             st.dataframe(df_users[['name', 'username', 'role']], use_container_width=True)
